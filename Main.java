@@ -1,9 +1,11 @@
 package application;
 
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -18,6 +20,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class Main extends Application {
 	private double speed = 50.0;	// Define a initial velocity
@@ -72,7 +75,11 @@ public class Main extends Application {
 		wrongMsg.setLayoutX(200);
 		wrongMsg.setLayoutY(30);
 		wrongMsg.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-		root.getChildren().addAll(roadBorder, carRoof, carBody, wheel1, wheel2, speedInput, control, text, currentSpeed, wrongMsg);
+		// Integrate the various parts of the car into a whole
+		Pane car = new Pane();
+		car.getChildren().addAll(carRoof, carBody, wheel1, wheel2);
+		
+		root.getChildren().addAll(roadBorder, car, speedInput, control, text, currentSpeed, wrongMsg);
 		
 		// Event handler "submit" button
 		control.setOnAction(new EventHandler<ActionEvent>() {
@@ -81,15 +88,24 @@ public class Main extends Application {
 				try {
 					speed = Double.parseDouble(speedInput.getText());
 					currentSpeed.setText("The car's current speed is: " + speed);
+					wrongMsg.setText("");
+					// Complete the animation effect of the car moving left and right
+					TranslateTransition translate = new TranslateTransition(Duration.seconds(50 / speed), car);
+					car.setTranslateX(-20);
+					translate.setToX(700);
+					translate.setCycleCount(TranslateTransition.INDEFINITE);
+					translate.play(); // 看看有没有更好的解决办法。
 				} catch(NumberFormatException e) {
 					wrongMsg.setText("Please enter valid numbers!");
 				}
 			}
 		});
 		
-		// 
-		Scene scene = new Scene(root, 800, 400);
+		Scene scene = new Scene(root, 780, 400);
 		primaryStage.setScene(scene);
 		primaryStage.show();
+		// 后续要实现：添加暂停按钮，按下按钮小车暂停运动，按钮文字变为继续，再次按下小车继续运动。
+		// 当鼠标点击小车时，小车停止运动，并且鼠标可以拖动小车左右移动。
+		
 	}
 }
