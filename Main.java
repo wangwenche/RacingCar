@@ -24,6 +24,8 @@ import javafx.util.Duration;
 
 public class Main extends Application {
 	private double speed = 50.0;	// Define a initial velocity
+	double xOffset = 0;
+	double yOffset = 0;
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -81,6 +83,13 @@ public class Main extends Application {
 		
 		root.getChildren().addAll(roadBorder, car, speedInput, control, text, currentSpeed, wrongMsg);
 		
+		// Complete the animation effect of the car moving left and right
+		TranslateTransition translate = new TranslateTransition(Duration.seconds(50 / speed), car);
+		car.setTranslateX(-20);
+		translate.setToX(700);
+		translate.setCycleCount(TranslateTransition.INDEFINITE);
+		translate.play(); 		
+		
 		// Event handler "submit" button
 		control.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -89,23 +98,54 @@ public class Main extends Application {
 					speed = Double.parseDouble(speedInput.getText());
 					currentSpeed.setText("The car's current speed is: " + speed);
 					wrongMsg.setText("");
-					// Complete the animation effect of the car moving left and right
-					TranslateTransition translate = new TranslateTransition(Duration.seconds(50 / speed), car);
+					if(translate.getStatus() == javafx.animation.Animation.Status.RUNNING) {
+						translate.stop();
+					} 
+					translate.setDuration(Duration.seconds(50 / speed));
 					car.setTranslateX(-20);
 					translate.setToX(700);
-					translate.setCycleCount(TranslateTransition.INDEFINITE);
-					translate.play(); // 看看有没有更好的解决办法。
+					translate.play();
 				} catch(NumberFormatException e) {
 					wrongMsg.setText("Please enter valid numbers!");
 				}
+			}
+		});
+		// When the mouse clicks on the car, the car stops moving. Click the car again and the car continues to move.
+		car.setOnMouseClicked(event -> {
+			if(translate.getStatus() == javafx.animation.Animation.Status.RUNNING) {
+				translate.pause();
+			} else {
+				translate.play();
+			}
+		});
+		// The mouse can drag the car to move left and right
+		car.setOnMousePressed(event -> {
+			xOffset = event.getSceneX() - carBody.getLayoutX();
+			yOffset = event.getSceneY() - carBody.getLayoutY();
+		});
+		
+		car.setOnMouseDragged(event -> {
+			car.setLayoutX(event.getSceneX() - xOffset);
+		});
+		
+		// Add a "pause" button
+		Button pause = new Button("Pause");
+		pause.setLayoutX(390);
+		pause.setLayoutY(200);
+		root.getChildren().add(pause);
+		pause.setOnMouseClicked(event -> {
+			if(pause.getText() == "Pause") {
+				pause.setText("Continue");
+				translate.pause();
+			}
+			else if(pause.getText() == "Continue") {
+				pause.setText("Pause");
+				translate.play();
 			}
 		});
 		
 		Scene scene = new Scene(root, 780, 400);
 		primaryStage.setScene(scene);
 		primaryStage.show();
-		// 后续要实现：添加暂停按钮，按下按钮小车暂停运动，按钮文字变为继续，再次按下小车继续运动。
-		// 当鼠标点击小车时，小车停止运动，并且鼠标可以拖动小车左右移动。
-		
 	}
 }
